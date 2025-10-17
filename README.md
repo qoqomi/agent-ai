@@ -40,4 +40,4 @@
 
 ## Contributors 
 - 김철수 : Prompt Engineering, Agent Design 
-- 최영희 : PDF Parsing, Retrieval Agent 
+- 최영희 : PDF Parsing, Retrieval Agent dfddfd
