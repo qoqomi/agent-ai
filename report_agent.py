@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, List
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -82,6 +82,35 @@ def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     tech_summary = _coerce_text_field(state.get("tech_summary"))
     market_analysis = _coerce_text_field(state.get("market_analysis"))
     decision_reason = _coerce_text_field(state.get("decision_reason"))
+    attempts = int(state.get("iteration_count", 0) or 0)
+    reason_tokens = [token.strip() for token in decision_reason.split("|") if token.strip()]
+    rationale_bullets: List[str] = []
+    for token in reason_tokens:
+        lower = token.lower()
+        if lower.startswith("결정") or lower.startswith("decision"):
+            continue
+        if lower.startswith("근거") or lower.startswith("rationale"):
+            payload = token.split(":", 1)[1] if ":" in token else token
+            rationale_bullets.extend(seg.strip() for seg in payload.split(";") if seg.strip())
+            continue
+        rationale_bullets.append(token)
+
+    invest_bullets: List[str] = []
+    decline_bullets: List[str] = []
+    if invest:
+        invest_bullets = [bullet for bullet in rationale_bullets if bullet]
+        if attempts > 1:
+            invest_bullets.append(f"Decision reached after {attempts} validation loop(s), reflecting additional cross-checks before approval.")
+        if not invest_bullets and decision_reason:
+            invest_bullets.append(decision_reason)
+    else:
+        decline_bullets = [bullet for bullet in rationale_bullets if bullet]
+        if not decline_bullets and decision_reason:
+            decline_bullets.append(decision_reason)
+        if attempts >= 5:
+            decline_bullets.append(f"{attempts} consecutive evaluation loops exhausted the retry budget without meeting evidence coverage thresholds.")
+        elif attempts > 1:
+            decline_bullets.append(f"Decision was reached after {attempts} iterations with insufficient conviction.")
 
     scorecard_scores = state.get("scorecard_scores") or {}
     valuation = ScorecardEvaluator.calculate(scorecard_scores)
@@ -133,6 +162,25 @@ def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
             "declining the opportunity at this time given outstanding risks."
         )
     doc.add_paragraph(summary_intro)
+
+    if invest:
+        if invest_bullets:
+            doc.add_paragraph("Key investment highlights:")
+            for bullet in invest_bullets[:3]:
+                doc.add_paragraph(bullet, style="List Bullet")
+        if attempts > 1:
+            doc.add_paragraph(
+                f"The committee completed {attempts} validation loop(s) before approving the deal."
+            )
+    else:
+        if attempts:
+            doc.add_paragraph(
+                f"The LangGraph workflow completed {attempts} iteration(s) without reaching the required evidence coverage thresholds."
+            )
+        if decline_bullets:
+            doc.add_paragraph("Key decline drivers (condensed):")
+            for bullet in decline_bullets[:3]:
+                doc.add_paragraph(bullet, style="List Bullet")
 
     doc.add_paragraph()
     summary_table = doc.add_table(rows=5, cols=2)
@@ -201,7 +249,24 @@ def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
 
     doc.add_heading("5. Investment Considerations", level=1)
     doc.add_heading("Decision Rationale", level=2)
-    doc.add_paragraph(decision_reason or "No explicit rationale captured.")
+    if invest:
+        if invest_bullets:
+            doc.add_paragraph("Investment thesis and validation notes:")
+            for bullet in invest_bullets:
+                doc.add_paragraph(bullet, style="List Bullet")
+        else:
+            doc.add_paragraph(decision_reason or "No explicit rationale captured.")
+    else:
+        if attempts:
+            doc.add_paragraph(
+                f"The committee completed {attempts} evaluation loop(s) without gathering sufficient conviction to proceed."
+            )
+        if decline_bullets:
+            doc.add_paragraph("Detailed decline rationale:")
+            for bullet in decline_bullets:
+                doc.add_paragraph(bullet, style="List Bullet")
+        else:
+            doc.add_paragraph(decision_reason or "No explicit rationale captured.")
 
     strengths = [
         f"{detail['label']}: {detail['score']:.2f}"
