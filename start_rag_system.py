@@ -29,6 +29,7 @@ class RAGSystem:
             doc_dir: PDF 문서가 있는 폴더 경로
         """
         self.doc_dir = Path(doc_dir)
+        self.doc_dir.mkdir(parents=True, exist_ok=True)
         self.vectorstore = None
        
         self.embeddings = HuggingFaceEmbeddings(
@@ -47,10 +48,11 @@ class RAGSystem:
         print("\n[INFO] PDF 문서 로드 중...")
         
         docs = []
-        pdf_files = list(self.doc_dir.glob("*.pdf"))
-        
+        pdf_files = sorted(self.doc_dir.glob("*.pdf"))
+
         if not pdf_files:
-            raise ValueError(f"[ERROR] {self.doc_dir} 폴더에 PDF 파일이 없습니다!")
+            print(f"[WARN] {self.doc_dir} 폴더에서 PDF 파일을 찾지 못했습니다. 빈 결과를 반환합니다.")
+            return []
         
         for pdf_path in pdf_files:
             print(f"  [LOADING] {pdf_path.name}")
@@ -77,6 +79,10 @@ class RAGSystem:
         
         # 1. 문서 로드
         docs = self.load_documents()
+        if not docs:
+            print("[WARN] 문서가 없어 벡터 스토어를 구성하지 않습니다.")
+            self.vectorstore = None
+            return
         
         # 2. 텍스트 분할
         print("\n[INFO] 텍스트 분할 중...")
@@ -105,7 +111,7 @@ class RAGSystem:
             검색 결과 텍스트
         """
         if not self.vectorstore:
-            raise ValueError("[ERROR] 벡터 스토어가 초기화되지 않았습니다! build()를 먼저 실행하세요.")
+            return "[INFO] Vector store not initialized. Add PDFs to documents/ and rerun build()."
         
         # 유사도 검색
         docs = self.vectorstore.similarity_search(query, k=k)

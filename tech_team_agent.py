@@ -141,22 +141,34 @@ def parse_simple(content: str) -> dict:
 
 
 def format_search_results(results_dict: dict) -> str:
-    """검색 결과"""
+    """?? ?? ?? ??"""
     formatted = []
     for category, results in results_dict.items():
         formatted.append(f"[{category}]")
-        if results:
-            formatted.append(results[0].get("content", "")[:150])
+        if not results:
+            continue
+
+        first = results[0]
+        if isinstance(first, dict):
+            snippet = first.get("content") or first.get("snippet") or first.get("title") or ""
+        elif isinstance(first, str):
+            snippet = first
+        else:
+            snippet = str(first)
+
+        formatted.append(snippet[:150])
     return "\n".join(formatted)
 
 
 def extract_sources(results_dict: dict) -> list:
-    """URL 추출"""
+    """?? ???? URL? ??"""
     sources = []
     for results in results_dict.values():
         for r in results:
-            if url := r.get("url"):
-                sources.append(url)
+            if isinstance(r, dict):
+                url = r.get("url")
+                if url:
+                    sources.append(url)
     return list(set(sources))
 
 
