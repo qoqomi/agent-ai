@@ -130,13 +130,13 @@ def create_graph():
     workflow = StateGraph(AgentState)
     
     # 노드 추가
-    workflow.add_node("startup_search", startup_search_node)
+    workflow.add_node("startup_search_agent", startup_search_node)
     
     # 시작점 설정
-    workflow.set_entry_point("startup_search")
+    workflow.set_entry_point("startup_search_agent")
     
     # 종료점 연결
-    workflow.add_edge("startup_search", END)
+    workflow.add_edge("startup_search_agent", END)
     
     return workflow.compile()
 
