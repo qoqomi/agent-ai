@@ -61,11 +61,9 @@ LangGraph 기반의 멀티에이전트 구조를 통해 시장성·기술력·�
 | Agent                         | Role    | Description                    | 이름       |
 | ----------------------------- | ------- | ------------------------------ | -------- |
 | **startup_search Agent**      | 스타트업 탐색 | 국내외 위성 스타트업 데이터 수집             | **조현준**  |
-| **tech_summary Agent**        | 기술력 평가  | 웹 검색 및 PDF 기반 기술 경쟁력 분석        | **유승연**  |
+| **tech_summary Agent**, **report_writer Agent**	        | 기술력 평가  | 웹 검색 및 PDF 기반 기술 경쟁력 분석        | **유승연**  |
 | **market_analysis Agent**     | 시장성 평가  | 산업 보고서 기반 시장성 스코어 산출           | **정민주**  |
 | **investment_decision Agent** | 투자 판단   | 종합 스코어카드로 Invest/Watch/Hold 분류 | **고경남**  |
-| **report_writer Agent**       | 보고서 생성  | 최종 투자 보고서 자동 작성                | **유승연** |
-
 ---
 
 ## 🏗️ Architecture
