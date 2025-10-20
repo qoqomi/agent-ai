@@ -74,6 +74,92 @@ def _safe_filename(name: str) -> str:
     return filtered or "startup"
 
 
+def _maybe_parse_json_blob(text: str) -> Any | None:
+    if not isinstance(text, str):
+        return None
+    candidate = text.strip()
+    if not candidate or candidate[0] not in "{[":
+        return None
+    try:
+        return json.loads(candidate)
+    except Exception:
+        return None
+
+
+def _render_market_section(doc: Document, market_text: str) -> None:
+    data = _maybe_parse_json_blob(market_text)
+    if not data:
+        doc.add_paragraph(market_text or "No market analysis provided.")
+        return
+
+    target = data.get("target") or data.get("segment") or "N/A"
+    geo = data.get("geo") or data.get("region") or "N/A"
+    doc.add_paragraph(f"Target Segment: {target} | Geography: {geo}")
+
+    scores = data.get("scores") if isinstance(data, dict) else None
+    if isinstance(scores, dict) and scores:
+        table = doc.add_table(rows=len(scores) + 1, cols=2)
+        table.style = "Light Grid Accent 1"
+        table.rows[0].cells[0].text = "Metric"
+        table.rows[0].cells[1].text = "Score"
+        for idx, (metric, value) in enumerate(scores.items(), start=1):
+            table.rows[idx].cells[0].text = metric.replace("_", " ").title()
+            table.rows[idx].cells[1].text = f"{value}"
+        doc.add_paragraph()
+
+    total = data.get("total")
+    band = data.get("band")
+    if total is not None or band is not None:
+        doc.add_paragraph(
+            "Composite Score: "
+            + (f"{total}" if total is not None else "N/A")
+            + " | Band: "
+            + (band or "N/A")
+        )
+
+    rationale = data.get("rationale") or data.get("summary")
+    if isinstance(rationale, list):
+        doc.add_paragraph("Key takeaways:")
+        for item in rationale:
+            if isinstance(item, str) and item.strip():
+                doc.add_paragraph(item.strip(), style="List Bullet")
+    elif isinstance(rationale, str) and rationale.strip():
+        doc.add_paragraph(rationale.strip())
+
+    key_evidence = data.get("key_evidence")
+    if isinstance(key_evidence, list) and key_evidence:
+        doc.add_paragraph("Evidence excerpts:")
+        for evidence in key_evidence:
+            if isinstance(evidence, dict):
+                claim = evidence.get("claim") or evidence.get("summary")
+                source = evidence.get("source") or evidence.get("citation")
+                snippet = claim or json.dumps(evidence, ensure_ascii=False)
+                line = snippet
+                if source:
+                    line += f" (Source: {source})"
+                doc.add_paragraph(line, style="List Bullet")
+            elif isinstance(evidence, str) and evidence.strip():
+                doc.add_paragraph(evidence.strip(), style="List Bullet")
+
+    risks = data.get("risks")
+    if isinstance(risks, list) and risks:
+        doc.add_paragraph("Noted risks:")
+        for risk in risks:
+            if isinstance(risk, str) and risk.strip():
+                doc.add_paragraph(risk.strip(), style="List Bullet")
+
+    assumptions = data.get("assumptions")
+    if isinstance(assumptions, list) and assumptions:
+        doc.add_paragraph("Key assumptions:")
+        for assumption in assumptions:
+            if isinstance(assumption, str) and assumption.strip():
+                doc.add_paragraph(assumption.strip(), style="List Bullet")
+
+    freshness = data.get("data_freshness")
+    if isinstance(freshness, str) and freshness.strip():
+        doc.add_paragraph(f"Data freshness: {freshness.strip()}")
+
+
 def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     """Generate an investment memo in DOCX format based on the committee decision."""
     invest = int(state.get("investment_decision", 0)) == 1
@@ -228,7 +314,7 @@ def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     doc.add_page_break()
 
     doc.add_heading("3. Market Assessment", level=1)
-    doc.add_paragraph(market_analysis or "No market analysis provided.")
+    _render_market_section(doc, market_analysis)
 
     doc.add_page_break()
 

@@ -131,9 +131,14 @@ def _ensure_retriever(k: int = 8):
     else:
         # --- 2-1) PDF 존재 확인 ---
         pdf_paths = [_DEFAULT_PDF1, _DEFAULT_PDF2]
-        for p in pdf_paths:
-            if not os.path.exists(p):
-                raise FileNotFoundError(f"PDF not found: {p}")
+        missing = [p for p in pdf_paths if not os.path.exists(p)]
+        if missing:
+            print("[WARN] Missing PDF files for market evaluation:")
+            for m in missing:
+                print(f"  - {m}")
+            print("[WARN] Skipping PDF-based retrieval and falling back to other context sources.")
+            _RETRIEVER = None
+            return _RETRIEVER
 
         # --- 2-2) 로드 + 청크 분할 ---
         # 문서 길이를 1000자 단위로 분할(150자 중첩) → 검색 품질 및 문맥성 유지
@@ -234,6 +239,8 @@ def _extract_json(text: str) -> Dict[str, Any]:
 # ==========================================================
 def _gather_context_pdf(target: str, geo: str = "KR", topk_each: int = 6) -> str:
     retriever = _ensure_retriever()
+    if retriever is None:
+        return ""
     hints = " ".join(SECTOR_HINTS)
     base = f"{geo} {target}".strip()
 
