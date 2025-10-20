@@ -86,14 +86,16 @@ def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     reason_tokens = [token.strip() for token in decision_reason.split("|") if token.strip()]
     rationale_bullets: List[str] = []
     for token in reason_tokens:
-        lower = token.lower()
-        if lower.startswith("결정") or lower.startswith("decision"):
+        normalized = token.strip()
+        lower = normalized.lower()
+        simple = lower.replace(" ", "")
+        if simple in {"투자", "비투자", "invest", "decline"}:
             continue
-        if lower.startswith("근거") or lower.startswith("rationale"):
+        if any(lower.startswith(prefix) for prefix in ("근거", "사유", "이유", "rationale", "reason")):
             payload = token.split(":", 1)[1] if ":" in token else token
             rationale_bullets.extend(seg.strip() for seg in payload.split(";") if seg.strip())
             continue
-        rationale_bullets.append(token)
+        rationale_bullets.append(normalized)
 
     invest_bullets: List[str] = []
     decline_bullets: List[str] = []
@@ -103,6 +105,8 @@ def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
             invest_bullets.append(f"Decision reached after {attempts} validation loop(s), reflecting additional cross-checks before approval.")
         if not invest_bullets and decision_reason:
             invest_bullets.append(decision_reason)
+        if not invest_bullets:
+            invest_bullets.append("No explicit investment rationale recorded; review agent transcripts for additional detail.")
     else:
         decline_bullets = [bullet for bullet in rationale_bullets if bullet]
         if not decline_bullets and decision_reason:
@@ -111,6 +115,8 @@ def report_generator_agent(state: Dict[str, Any]) -> Dict[str, Any]:
             decline_bullets.append(f"{attempts} consecutive evaluation loops exhausted the retry budget without meeting evidence coverage thresholds.")
         elif attempts > 1:
             decline_bullets.append(f"Decision was reached after {attempts} iterations with insufficient conviction.")
+        if not decline_bullets:
+            decline_bullets.append("No explicit decline rationale recorded; inspect LangGraph logs for contributing factors.")
 
     scorecard_scores = state.get("scorecard_scores") or {}
     valuation = ScorecardEvaluator.calculate(scorecard_scores)
