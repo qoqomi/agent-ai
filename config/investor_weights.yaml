@@ -1,0 +1,9 @@
+investors:
+  Sequoia:
+    weights: {Team: 0.25, Market: 0.25, PMF: 0.20, Moat: 0.10, Traction: 0.10, UnitEconomics: 0.05, DefaultAlive: 0.03, PowerLaw: 0.02}
+  "Andreessen / a16z":
+    weights: {Team: 0.20, Market: 0.20, PMF: 0.20, Moat: 0.15, Traction: 0.10, UnitEconomics: 0.10, DefaultAlive: 0.03, PowerLaw: 0.02}
+  NFX:
+    weights: {Team: 0.15, Market: 0.15, PMF: 0.15, Moat: 0.35, Traction: 0.10, UnitEconomics: 0.05, DefaultAlive: 0.03, PowerLaw: 0.02}
+  "Paul Graham":
+    weights: {Team: 0.20, Market: 0.15, PMF: 0.20, Moat: 0.05, Traction: 0.10, UnitEconomics: 0.05, DefaultAlive: 0.20, PowerLaw: 0.05}
