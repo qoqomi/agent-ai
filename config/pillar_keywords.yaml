@@ -1,0 +1,8 @@
+Team: ["founder", "team", "hiring", "ceo", "cto", "culture"]
+Market: ["tam", "market size", "demand", "category", "pricing"]
+PMF: ["product-market fit", "pmf", "retention", "engagement", "usage"]
+Moat: ["moat", "defensibility", "network effects", "switching costs", "lock-in"]
+Traction: ["growth", "mrr", "arr", "revenue", "users", "activation", "cohort"]
+UnitEconomics: ["ltv", "cac", "payback", "gross margin", "cohort", "churn", "quick ratio"]
+DefaultAlive: ["runway", "burn", "default alive", "default dead", "cash flow", "profitability"]
+PowerLaw: ["power law", "babe ruth", "outlier", "10x", "winner-take-most"]
