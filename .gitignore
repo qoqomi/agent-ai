@@ -1,0 +1,25 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# 환경변수
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 시스템
+.DS_Store
+Thumbs.db
+
+# 기타
+*.log
+.pytest_cache/
