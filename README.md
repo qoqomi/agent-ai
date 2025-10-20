@@ -1,7 +1,8 @@
 # 🚀 Space Industry Startup Investment Evaluation Agent
 
-위성(우주산업) 스타트업의 **투자 가능성을 자동으로 평가**하는 AI Agentic RAG 프로젝트입니다.  
+본 프로젝트는 위성(우주산업) 스타트업의 투자 가능성을 자동으로 평가하는 AI Agentic RAG 시스템입니다.
 LangGraph 기반의 멀티에이전트 구조를 통해 시장성·기술력·팀·재무 정보를 분석하고, LLM 스코어카드로 종합 투자 판단을 수행합니다.
+특히, 실제 스타트업 헌터(Startup Hunter)와 투자 전문가들의 분석 패턴을 모델링하여, 단순 데이터 기반 평가를 넘어 **‘현장 감각이 반영된 투자 판단’**을 목표로 합니다.
 
 ---
 
@@ -57,12 +58,13 @@ LangGraph 기반의 멀티에이전트 구조를 통해 시장성·기술력·�
 
 ## 🤖 Agents
 
-| Agent | Role | Description |
-|--------|------|-------------|
-| **startup_search Agent** | 스타트업 탐색 | 국내외 위성 스타트업 데이터 수집 |
-| **tech_summary Agent** | 기술력 평가 | 웹 검색 및 PDF 기반 기술 경쟁력 분석 |
-| **market_analysis Agent** | 시장성 평가 | 산업 보고서 기반 시장성 스코어 산출 |
-| **investment_decision Agent** | 투자 판단 | 종합 스코어카드로 Invest/Watch/Hold 분류 |
+| Agent                         | Role    | Description                    | 이름       |
+| ----------------------------- | ------- | ------------------------------ | -------- |
+| **startup_search Agent**      | 스타트업 탐색 | 국내외 위성 스타트업 데이터 수집             | **조현준**  |
+| **tech_summary Agent**        | 기술력 평가  | 웹 검색 및 PDF 기반 기술 경쟁력 분석        | **유승연**  |
+| **market_analysis Agent**     | 시장성 평가  | 산업 보고서 기반 시장성 스코어 산출           | **정민주**  |
+| **investment_decision Agent** | 투자 판단   | 종합 스코어카드로 Invest/Watch/Hold 분류 | **고경남**  |
+| **report_writer Agent**       | 보고서 생성  | 최종 투자 보고서 자동 작성                | **유승연** |
 
 ---
 
