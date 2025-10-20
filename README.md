@@ -28,7 +28,7 @@
 - Agent B: Evaluates market opportunity and team capability
 
 ## Architecture
-(그래프 이미지)
+![System architecture diagram](documents/output.png)
 
 ## Directory Structure
 ├── data/                  # 스타트업 PDF 문서
