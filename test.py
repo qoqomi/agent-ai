@@ -13,24 +13,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from typing import Annotated, TypedDict, Sequence, Literal
-from pydantic import BaseModel
+from typing import TypedDict, Literal
 
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, BaseMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain.agents import create_react_agent
-
-from langchain.tools import tool
 from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import create_react_agent
-
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_community.vectorstores import FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains import RetrievalQA
 
 # 현준 모듈
 from start_agent import startup_search_node
@@ -44,6 +29,9 @@ from tech_team_agent import tech_team_summary
 # 경남 모듈
 from decision_module import investment_decision_agent
 
+# 승연 모듈2
+from report_agent import report_generator_agent
+
 # ====== AgentState (업데이트된 스키마) ======
 class AgentState(TypedDict):
     startup_name: str
@@ -55,23 +43,28 @@ class AgentState(TypedDict):
     report: str                  # 상세 리포트
     iteration_count: int
     
-def report_writer_agent(state: AgentState) -> AgentState:
-    pass
+
+def should_continue(state: AgentState) -> Literal["report_writer", "startup_search"]:
+    """Loop back for non-invest decisions until we hit five attempts."""
+    decision = state.get("investment_decision", 0)
+    iteration_count = state.get("iteration_count", 0) or 0
+
+    if decision == 1:
+        return "report_writer"
+
+    if iteration_count >= 5:
+        return "report_writer"
+
+    return "startup_search"
 
 def create_workflow():
     graph = StateGraph(AgentState)
 
     graph.add_node("startup_search", startup_search_node) # 현준, 완
-    
     graph.add_node("tech_summary", tech_team_summary) # 승연, 완
-    
     graph.add_node("market_eval", market_eval_agent) # 민주, 완
-    
     graph.add_node("investment_decision", investment_decision_agent) # 경남, 완
-    
-    graph.add_node("report_writer", report_writer_agent) # 승연, 미완
-
-
+    graph.add_node("report_writer", report_generator_agent) # 승연, 완
 
     graph.set_entry_point("startup_search")
 
@@ -79,12 +72,37 @@ def create_workflow():
     graph.add_edge("tech_summary", "market_eval")
     graph.add_edge("market_eval", "investment_decision")
 
-    # graph.add_conditional_edges(
-    #     "investment_decision",
-    #     should_continue,
-    #     {"report_writer": "report_writer", "startup_search": "startup_search"},
-    # )
+    graph.add_conditional_edges(
+        "investment_decision",
+        should_continue,
+        {"report_writer": "report_writer", "startup_search": "startup_search"},
+    )
 
     graph.set_finish_point("report_writer")
 
     return graph.compile()
+
+
+def _initial_state() -> AgentState:
+    """Helper to create a LangGraph-compatible initial state."""
+    return {
+        "startup_name": "",
+        "startup_info": {},
+        "tech_summary": "",
+        "market_analysis": "",
+        "investment_decision": 0,
+        "decision_reason": "",
+        "report": "",
+        "iteration_count": 0,
+    }
+
+
+if __name__ == "__main__":
+    workflow = create_workflow()
+    final_state = workflow.invoke(_initial_state())
+
+    print("\n=== Workflow finished ===")
+    print(f"Decision : {'Invest' if final_state['investment_decision'] else 'Decline'}")
+    print(f"Reason   : {final_state['decision_reason']}")
+    print(f"Report   : {final_state.get('report', '(none)')}")
+    print(f"Iterations: {final_state['iteration_count']}")

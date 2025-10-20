@@ -78,7 +78,7 @@ def tech_team_summary(state: AgentState) -> AgentState:
     result = llm.invoke(evaluation_prompt)
     parsed = parse_simple(result.content)
 
-    state["tech_team_summary"] = {
+    summary_payload = {
         "full_text": clean_markdown(result.content),
         "tech_score": parsed["tech_score"],
         "team_score": parsed["team_score"],
@@ -88,6 +88,8 @@ def tech_team_summary(state: AgentState) -> AgentState:
         "competitive_table": parsed["competitive_table"],
         "sources": extract_sources(all_results)[:3],
     }
+    state["tech_team_summary"] = summary_payload
+    state["tech_summary"] = summary_payload["full_text"]
 
     print(f"✓ 기술: {state['tech_team_summary']['tech_score']}%")
     print(f"✓ 팀: {state['tech_team_summary']['team_score']}%\n")
